@@ -1,13 +1,14 @@
 {
-  "title": "Screenshot Button",
-  "name": "ssb",
-  "version": "0.0.1",
+  "license": "MIT",
   "description": "Simple screenshot button",
-  "main": "index.js",
-  "author": "Sam Hiatt samhiatt@gmail.com",
   "engines": {
-    "firefox": ">=37",
-    "fennec": ">=37"
+    "firefox": ">=32",
+    "fennec": ">=32"
   },
-  "license": "MIT"
+  "author": "Sam Hiatt samhiatt@gmail.com",
+  "title": "Screenshot Button",
+  "version": "0.0.1",
+  "main": "index.js",
+  "id": "jid1-hEdfTTCob7jywg",
+  "name": "ssb"
 }
