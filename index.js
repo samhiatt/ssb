@@ -6,10 +6,13 @@ var self = require('sdk/self');
 var buttons = require('sdk/ui/button/action');
 var tabs = require("sdk/tabs");
 var tab_utils = require("sdk/tabs/utils");
+var Request = require("sdk/request").Request;
 var io = require("sdk/io/file");
 
 var { viewFor } = require("sdk/view/core");
 const { Cc, Ci, Cu } = require("chrome");
+
+var ipLastUpdated, ip;
 
 exports.button = buttons.ActionButton({
   id: "ssb-button",
@@ -23,6 +26,29 @@ exports.button = buttons.ActionButton({
 });
 
 function handleClick(state) {
+	console.log("STATE:",state);
+	updateIp();
+	takeScreenshot();
+}
+
+function updateIp(){
+	console.log("Last updated:",ipLastUpdated);
+	if (ip && (new Date()-ipLastUpdated < 1000*60*15)) {
+		console.log("Already have ip:",ip,"from",ipLastUpdated.toISOString());
+		return;
+	}
+	ipRequest = Request({
+		url: "http://bot.whatismyipaddress.com/",
+		onComplete: function (response) {
+			console.log("IP address, according to bot.whatismyipaddress.com:",response.text);
+			ip = response.text;
+			ipLastUpdated = new Date();
+		}
+	}).get();
+
+}
+
+function takeScreenshot() {
 	var tab = tabs.activeTab;
 	var lowLevelTab = viewFor(tab);
 	var browser = tab_utils.getBrowserForTab(lowLevelTab);
