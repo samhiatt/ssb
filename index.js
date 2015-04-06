@@ -26,11 +26,29 @@ exports.button = buttons.ActionButton({
 });
 
 function handleClick(state) {
+	const {OS} = Cu.import("resource://gre/modules/osfile.jsm", {});
+	const FileUtils = Cu.import("resource://gre/modules/FileUtils.jsm", {});
+	var downloadDir = Cc["@mozilla.org/file/directory_service;1"].
+		getService(Ci.nsIProperties).
+		get("DfltDwnld", Ci.nsIFile);
+
+	var dateStr = new Date().toISOString().replace(/:/g,"-");
+	var newDir = downloadDir.clone();
+	newDir.append("SSB_snapshot_"+dateStr);
+	OS.File.makeDir(newDir.path);
+
 	updateIp(function(err,ip,updated){
 		if (err) throw err;
 		console.log("Browser's IP address, as seen from bot.whatismyipaddress.com:",ip,"Last updated:"+updated.toISOString());
+		var ipLogFile = newDir.clone();
+		ipLogFile.append('BrowserIpAddress_'+updated.toISOString().replace(/:/g,"-")+".txt");
+		var outFile = require('sdk/io/file').open(ipLogFile.path,'w');
+		outFile.write(ip);
+		outFile.close();
+
+		console.log("Browser IP loggged to "+ipLogFile.path);
 	});
-	takeScreenshot();
+	takeScreenshot(newDir);
 }
 
 function updateIp(callback){
@@ -53,7 +71,7 @@ function updateIp(callback){
 
 }
 
-function takeScreenshot() {
+function takeScreenshot(newDir) {
 	var tab = tabs.activeTab;
 	var lowLevelTab = viewFor(tab);
 	var browser = tab_utils.getBrowserForTab(lowLevelTab);
@@ -88,16 +106,7 @@ function takeScreenshot() {
 	let data = canvas.toDataURL("image/png", "");
 
 	window.scrollTo(currentX, currentY);
-	const {OS} = Cu.import("resource://gre/modules/osfile.jsm", {});
-	var downloadDir = Cc["@mozilla.org/file/directory_service;1"].
-		getService(Ci.nsIProperties).
-		get("DfltDwnld", Ci.nsIFile);
 
-	var dateStr = new Date().toISOString().replace(/:/g,"-");
-	var newDir = downloadDir.clone();
-	newDir.append("SSB_snapshot_"+dateStr);
-
-	OS.File.makeDir(newDir.path);
 	var file = newDir.clone();
 	file.append("Screenshot.png");
 
