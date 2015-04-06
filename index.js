@@ -88,12 +88,18 @@ function takeScreenshot() {
 	let data = canvas.toDataURL("image/png", "");
 
 	window.scrollTo(currentX, currentY);
-
-	var file = Cc["@mozilla.org/file/directory_service;1"].
+	const {OS} = Cu.import("resource://gre/modules/osfile.jsm", {});
+	var downloadDir = Cc["@mozilla.org/file/directory_service;1"].
 		getService(Ci.nsIProperties).
 		get("DfltDwnld", Ci.nsIFile);
 
-	file.append("Screenshot_"+new Date().toISOString()+".png");
+	var dateStr = new Date().toISOString().replace(/:/g,"-");
+	var newDir = downloadDir.clone();
+	newDir.append("SSB_snapshot_"+dateStr);
+
+	OS.File.makeDir(newDir.path);
+	var file = newDir.clone();
+	file.append("Screenshot.png");
 
 	let loadContext = document.defaultView
 		.QueryInterface(Ci.nsIInterfaceRequestor)
