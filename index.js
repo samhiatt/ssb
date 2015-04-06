@@ -26,6 +26,11 @@ exports.button = buttons.ActionButton({
 });
 
 function handleClick(state) {
+	var tab = tabs.activeTab;
+	var lowLevelTab = viewFor(tab);
+	var browser = tab_utils.getBrowserForTab(lowLevelTab);
+	var document = browser.contentDocument;
+
 	const {OS} = Cu.import("resource://gre/modules/osfile.jsm", {});
 	const FileUtils = Cu.import("resource://gre/modules/FileUtils.jsm", {});
 	var downloadDir = Cc["@mozilla.org/file/directory_service;1"].
@@ -35,7 +40,9 @@ function handleClick(state) {
 	var dateStr = new Date().toISOString().replace(/:/g,"-");
 	var newDir = downloadDir.clone();
 	newDir.append("SSB_snapshot_"+dateStr);
-	OS.File.makeDir(newDir.path);
+
+	// TODO: Add callback function, if supported, or try using newDirHandle
+	var newDirHandle = OS.File.makeDir(newDir.path);
 
 	updateIp(function(err,ip,updated){
 		if (err) throw err;
@@ -47,8 +54,20 @@ function handleClick(state) {
 		outFile.close();
 
 		console.log("Browser IP loggged to "+ipLogFile.path);
+
+		saveDocument(document, newDir);
 	});
-	takeScreenshot(newDir);
+	takeScreenshot(document, newDir);
+}
+
+function saveDocument(document,newDir){
+	var docLogFile = newDir.clone();
+	docLogFile.append('document_metadata.json');
+	var outFile = require('sdk/io/file').open(docLogFile.path,'w');
+	outFile.write(JSON.stringify(document));
+	outFile.close();
+
+	console.log("Document metadata saved to "+docLogFile.path);
 }
 
 function updateIp(callback){
@@ -71,12 +90,7 @@ function updateIp(callback){
 
 }
 
-function takeScreenshot(newDir) {
-	var tab = tabs.activeTab;
-	var lowLevelTab = viewFor(tab);
-	var browser = tab_utils.getBrowserForTab(lowLevelTab);
-	var document = browser.contentDocument;
-
+function takeScreenshot(document,newDir) {
 	let window = document.defaultView;
 	let canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
 	let left = 0;
