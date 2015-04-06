@@ -26,23 +26,30 @@ exports.button = buttons.ActionButton({
 });
 
 function handleClick(state) {
-	console.log("STATE:",state);
-	updateIp();
+	updateIp(function(err,ip,updated){
+		if (err) throw err;
+		console.log("Got IP:",ip,"Updated:"+updated.toISOString());
+	});
 	takeScreenshot();
 }
 
-function updateIp(){
-	console.log("Last updated:",ipLastUpdated);
+function updateIp(callback){
 	if (ip && (new Date()-ipLastUpdated < 1000*60*15)) {
 		console.log("Already have ip:",ip,"from",ipLastUpdated.toISOString());
+		callback(null, ip,ipLastUpdated);
 		return;
 	}
 	ipRequest = Request({
 		url: "http://bot.whatismyipaddress.com/",
 		onComplete: function (response) {
-			console.log("IP address, according to bot.whatismyipaddress.com:",response.text);
-			ip = response.text;
-			ipLastUpdated = new Date();
+			if (response.status!=200){
+				callback(new Error("Error getting browser's IP from bot.whatismyipaddress.com. RESPONSE STATUS: "+response.status));
+			} else {
+				console.log("Got browser's IP address, as seen from bot.whatismyipaddress.com:", response.text);
+				ip = response.text;
+				ipLastUpdated = new Date();
+				callback(null, ip, ipLastUpdated);
+			}
 		}
 	}).get();
 
