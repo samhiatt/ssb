@@ -7,7 +7,7 @@ var buttons = require('sdk/ui/button/action');
 var tabs = require("sdk/tabs");
 var tab_utils = require("sdk/tabs/utils");
 var Request = require("sdk/request").Request;
-var io = require("sdk/io/file");
+var IO = require("sdk/io/file");
 
 var { viewFor } = require("sdk/view/core");
 const { Cc, Ci, Cu } = require("chrome");
@@ -31,43 +31,34 @@ function handleClick(state) {
 	var browser = tab_utils.getBrowserForTab(lowLevelTab);
 	var document = browser.contentDocument;
 
-	const {OS} = Cu.import("resource://gre/modules/osfile.jsm", {});
-	const FileUtils = Cu.import("resource://gre/modules/FileUtils.jsm", {});
 	var downloadDir = Cc["@mozilla.org/file/directory_service;1"].
 		getService(Ci.nsIProperties).
 		get("DfltDwnld", Ci.nsIFile);
 
 	var dateStr = new Date().toISOString().replace(/:/g,"-");
-	var newDir = downloadDir.clone();
-	newDir.append("SSB_snapshot_"+dateStr);
+	var newDirName = IO.join(downloadDir.path, "SSB_snapshot_" + dateStr);
+	IO.mkpath(newDirName);
 
-	// TODO: Add callback function, if supported, or try using newDirHandle
-	var newDirHandle = OS.File.makeDir(newDir.path);
-
+	takeScreenshot(document, newDirName);
+	saveDocument(document, newDirName);
 	updateIp(function(err,ip,updated){
 		if (err) throw err;
 		console.log("Browser's IP address, as seen from bot.whatismyipaddress.com:",ip,"Last updated:"+updated.toISOString());
-		var ipLogFile = newDir.clone();
-		ipLogFile.append('BrowserIpAddress_'+updated.toISOString().replace(/:/g,"-")+".txt");
-		var outFile = require('sdk/io/file').open(ipLogFile.path,'w');
+		var filename = IO.join(newDirName, "BrowserIpAddress_" + updated.toISOString().replace(/:/g, "-") + ".txt");
+		var outFile = IO.open(filename,'w');
 		outFile.write(ip);
 		outFile.close();
+		console.log("Browser IP loggged to "+filename);
 
-		console.log("Browser IP loggged to "+ipLogFile.path);
-
-		saveDocument(document, newDir);
 	});
-	takeScreenshot(document, newDir);
 }
 
 function saveDocument(document,newDir){
-	var docLogFile = newDir.clone();
-	docLogFile.append('document_metadata.json');
-	var outFile = require('sdk/io/file').open(docLogFile.path,'w');
+	var filename = IO.join(newDir,'document_metadata.json');
+	var outFile = IO.open(filename,'w');
 	outFile.write(JSON.stringify(document));
 	outFile.close();
-
-	console.log("Document metadata saved to "+docLogFile.path);
+	console.log("Document metadata saved to "+filename);
 }
 
 function updateIp(callback){
@@ -121,9 +112,6 @@ function takeScreenshot(document,newDir) {
 
 	window.scrollTo(currentX, currentY);
 
-	var file = newDir.clone();
-	file.append("Screenshot.png");
-
 	let loadContext = document.defaultView
 		.QueryInterface(Ci.nsIInterfaceRequestor)
 		.getInterface(Ci.nsIWebNavigation)
@@ -137,6 +125,9 @@ function takeScreenshot(document,newDir) {
 		.createInstance(Persist);
 	persist.persistFlags = Persist.PERSIST_FLAGS_REPLACE_EXISTING_FILES |
 	Persist.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
+
+	var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+	file.initWithPath(IO.join(newDir, "Screenshot.png"));
 
 	let source = ioService.newURI(data, "UTF8", null);
 	persist.saveURI(source, null, null, 0, null, null, file, loadContext);
