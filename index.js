@@ -41,6 +41,7 @@ function handleClick(state) {
 
 	takeScreenshot(document, newDirName);
 	saveDocument(document, newDirName);
+	saveSource(document, newDirName);
 	updateIp(function(err,ip,updated){
 		if (err) throw err;
 		console.log("Browser's IP address, as seen from bot.whatismyipaddress.com:",ip,"Last updated:"+updated.toISOString());
@@ -51,6 +52,18 @@ function handleClick(state) {
 		console.log("Browser IP loggged to "+filename);
 
 	});
+}
+
+function saveSource(doc,dir){
+	var filename = IO.join(dir,'document_source.html');
+	var outFile = IO.open(filename,'w');
+
+	var oSerializer = Cc["@mozilla.org/xmlextras/xmlserializer;1"].createInstance(Ci.nsIDOMSerializer);
+	var xmlStr = oSerializer.serializeToString(doc);
+
+	outFile.write(xmlStr);
+	outFile.close();
+	console.log("Document source saved to "+filename);
 }
 
 function saveDocument(document,newDir){
@@ -119,6 +132,7 @@ function takeScreenshot(document,newDir) {
 
 	let ioService = Cc["@mozilla.org/network/io-service;1"]
 		.getService(Ci.nsIIOService);
+	let source = ioService.newURI(data, "UTF8", null);
 
 	let Persist = Ci.nsIWebBrowserPersist;
 	let persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
@@ -129,7 +143,6 @@ function takeScreenshot(document,newDir) {
 	var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
 	file.initWithPath(IO.join(newDir, "Screenshot.png"));
 
-	let source = ioService.newURI(data, "UTF8", null);
 	persist.saveURI(source, null, null, 0, null, null, file, loadContext);
 	console.log("Saved screenshot to file "+file.path);
 }
