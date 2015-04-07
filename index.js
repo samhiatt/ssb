@@ -50,7 +50,6 @@ function handleClick(state) {
 		outFile.write(ip);
 		outFile.close();
 		console.log("Browser IP loggged to "+filename);
-
 	});
 }
 
@@ -67,9 +66,13 @@ function saveSource(doc,dir){
 }
 
 function saveDocument(document,newDir){
-	var filename = IO.join(newDir,'document_metadata.json');
+	var filename = IO.join(newDir,'document_location.json');
 	var outFile = IO.open(filename,'w');
-	outFile.write(JSON.stringify(document));
+	var out = {};
+	for (var key in document.location) {
+		out[key] = (key=='password')? "***" : document.location[key];
+	}
+	outFile.write(JSON.stringify(out));
 	outFile.close();
 	console.log("Document metadata saved to "+filename);
 }
