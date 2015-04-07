@@ -36,7 +36,7 @@ function handleClick(state) {
 		get("DfltDwnld", Ci.nsIFile);
 
 	var dateStr = new Date().toISOString().replace(/:/g,"-");
-	var newDirName = IO.join(downloadDir.path, "SSB_snapshot_" + dateStr);
+	var newDirName = IO.join(downloadDir.path, "Snapshot_" + document.title + "_" + dateStr);
 	IO.mkpath(newDirName);
 
 	takeScreenshot(document, newDirName);
@@ -45,7 +45,7 @@ function handleClick(state) {
 	updateIp(function(err,ip,updated){
 		if (err) throw err;
 		console.log("Browser's IP address, as seen from bot.whatismyipaddress.com:",ip,"Last updated:"+updated.toISOString());
-		var filename = IO.join(newDirName, "BrowserIpAddress_" + updated.toISOString().replace(/:/g, "-") + ".txt");
+		var filename = IO.join(newDirName, "BrowserIpAddress_updated_" + updated.toISOString().replace(/:/g, "-") + ".txt");
 		var outFile = IO.open(filename,'w');
 		outFile.write(ip);
 		outFile.close();
