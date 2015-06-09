@@ -47,7 +47,10 @@ function handleClick(state) {
 		console.log("Browser's IP address, as seen from bot.whatismyipaddress.com:",ip,"Last updated:"+updated.toISOString());
 		var filename = IO.join(newDirName, "BrowserIpAddress_updated_" + updated.toISOString().replace(/:/g, "-") + ".txt");
 		var outFile = IO.open(filename,'w');
-		outFile.write(ip);
+		outFile.write("IP address, from bot.whatismyipaddress.com: "+ip+"\n");
+		var offset = new Date().getTimezoneOffset();
+		console.log("Browser timezone offset:", offset);
+		outFile.write("Browser timezone offset: "+ offset);
 		outFile.close();
 		console.log("Browser IP loggged to "+filename);
 	});
