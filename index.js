@@ -149,26 +149,23 @@ function takeScreenshot(document,newDir) {
 	persist.saveURI(source, null, null, 0, null, null, file, loadContext);
 	console.log("Saved screenshot to file "+file.path);
 	
-	notify({
-		data: file.path,
-		filename: file.path
-	});
+	notify(file.path);
 }
 
-function notify(imageSummary){
+function notify(filename){
 
 	var notifications = require("sdk/notifications");
 	notifications.notify({
-		text: "Screenshot saved saved to \n"+imageSummary.filename,
+		text: "Screenshot saved saved to \n"+filename,
 		title: "Screenshot",
-		data: imageSummary.filename,
+		data: filename,
 		onClick: function (data) {
 			console.log("Saved to ",data);
 			// console.log(this.data) would produce the same result.
 			
 			// On click open screenshot directory
 			const file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-			file.initWithPath(imageSummary.filename);
+			file.initWithPath(filename);
 			file.reveal();
 		}
 	});
