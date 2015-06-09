@@ -66,7 +66,7 @@ function saveSource(doc,dir){
 }
 
 function saveDocument(document,newDir){
-	var filename = IO.join(newDir,'document_location.json');
+	var filename = IO.join(newDir,'document_location.json'); 
 	var outFile = IO.open(filename,'w');
 	var out = {};
 	for (var key in document.location) {
@@ -148,4 +148,29 @@ function takeScreenshot(document,newDir) {
 
 	persist.saveURI(source, null, null, 0, null, null, file, loadContext);
 	console.log("Saved screenshot to file "+file.path);
+	
+	notify({
+		data: file.path,
+		filename: file.path
+	});
+}
+
+function notify(imageSummary){
+
+	var notifications = require("sdk/notifications");
+	notifications.notify({
+		text: "Screenshot saved saved to \n"+imageSummary.filename,
+		title: "Screenshot",
+		data: imageSummary.filename,
+		onClick: function (data) {
+			console.log("Saved to ",data);
+			// console.log(this.data) would produce the same result.
+			
+			// On click open screenshot directory
+			const file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+			file.initWithPath(imageSummary.filename);
+			file.reveal();
+		}
+	});
+	
 }
