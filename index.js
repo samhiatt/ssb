@@ -42,12 +42,10 @@ function handleClick(state) {
 		networkTimeUpdated = false;
 	var filename = IO.join(newDirName, "IpAndTimeLog.txt");
 	var outFile = IO.open(filename,'w');
-	getIp(function(err,ip,updated){
+	getIp(function(err,ip){
 		if (err) throw err;
 		console.log("Browser's IP address, as seen from bot.whatismyipaddress.com:",ip);
-		console.log("IP address last updated:"+updated.toISOString());
 		outFile.write("IP address, from bot.whatismyipaddress.com: "+ip+"\n");
-		outFile.write("IP address last updated: "+updated.toISOString()+"\n");
 		console.log("Browser time:", new Date().toISOString());
 		outFile.write("Browser time: "+ new Date().toISOString()+"\n");
 		ipUpdated = true;
@@ -94,9 +92,7 @@ function getIp(callback){
 			if (response.status!=200){
 				callback(new Error("Error getting browser's IP from bot.whatismyipaddress.com/. RESPONSE STATUS: "+response.status));
 			} else {
-				ip = response.text;
-				ipLastUpdated = new Date();
-				callback(null, ip, ipLastUpdated);
+				callback(null, response.text);
 			}
 		}
 	}).get();
