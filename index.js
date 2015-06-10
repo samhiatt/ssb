@@ -8,8 +8,6 @@ var self = require('sdk/self');
 var IO = require("sdk/io/file");
 const { Cc, Ci, Cu } = require("chrome");
 
-var ipLastUpdated, ip;
-
 exports.button = require('sdk/ui/button/action').ActionButton({
   id: "ssb-button",
   label: "Screenshot",
@@ -44,7 +42,7 @@ function handleClick(state) {
 		networkTimeUpdated = false;
 	var filename = IO.join(newDirName, "IpAndTimeLog.txt");
 	var outFile = IO.open(filename,'w');
-	updateIp(function(err,ip,updated){
+	getIp(function(err,ip,updated){
 		if (err) throw err;
 		console.log("Browser's IP address, as seen from bot.whatismyipaddress.com:",ip);
 		console.log("IP address last updated:"+updated.toISOString());
@@ -89,11 +87,7 @@ function saveDocument(document,newDir){
 	console.log("Document metadata saved to "+filename);
 }
 
-function updateIp(callback){
-	if (ip && (new Date()-ipLastUpdated < 1000*60*15)) {
-		callback(null, ip,ipLastUpdated);
-		return;
-	}
+function getIp(callback){
 	ipRequest = require("sdk/request").Request({
 		url: "http://bot.whatismyipaddress.com/",
 		onComplete: function (response) {
@@ -117,15 +111,6 @@ function getNetworkTime(callback){
 				callback(new Error("Error getting response from http://nist.time.gov. RESPONSE STATUS: "+response.status));
 			} else {
 				var utcString = new Date(response.headers["Date"]).toISOString();
-				//var respTxt = response.text;
-				//var timeStr = respTxt.match(/>(\d\d\:\d\d:\d\d)<\/span>/);
-				//var dateStr = respTxt.match(/id=ctdat>(.*?)<\/span>/);
-				//var parsedTime;
-				//try{
-				//	parsedTime = new Date(dateStr[1]+' '+timeStr[1]+' UTC').toISOString();
-				//} catch(err) {
-				//	console.error("Error parsing time from www.timenaddate.com/worldclock/timezone/utc.");
-				//}
 				callback(null, utcString);
 			}
 		}
