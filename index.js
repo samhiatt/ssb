@@ -39,21 +39,29 @@ function handleClick(state) {
 	takeScreenshot(document, newDirName);
 	saveDocument(document, newDirName);
 	saveSource(document, newDirName);
+	
+	var ipUpdated = false, 
+		networkTimeUpdated = false;
+	var filename = IO.join(newDirName, "IpAndTimeLog.txt");
+	var outFile = IO.open(filename,'w');
 	updateIp(function(err,ip,updated){
 		if (err) throw err;
-		console.log("Browser's IP address, as seen from bot.whatismyipaddress.com:",ip,"Last updated:"+updated.toISOString());
-		var filename = IO.join(newDirName, "BrowserIpAddress_updated_" + updated.toISOString().replace(/:/g, "-") + ".txt");
-		var outFile = IO.open(filename,'w');
+		console.log("Browser's IP address, as seen from bot.whatismyipaddress.com:",ip);
+		console.log("IP address last updated:"+updated.toISOString());
 		outFile.write("IP address, from bot.whatismyipaddress.com: "+ip+"\n");
+		outFile.write("IP address last updated: "+updated.toISOString()+"\n");
 		console.log("Browser time:", new Date().toISOString());
 		outFile.write("Browser time: "+ new Date().toISOString()+"\n");
-		getNetworkTime(function(err,time){
-			if (err) throw err;
-			console.log("Network Time:",time);
-			outFile.write("Network Time, from Date in http://nist.time.gov response header: "+time+"\n");
-			outFile.close();
-			console.log("Time and IP loggged to "+filename);
-		});
+		ipUpdated = true;
+		if (networkTimeUpdated) outFile.close();
+	});
+	getNetworkTime(function(err,time){
+		if (err) throw err;
+		console.log("Network Time:",time);
+		outFile.write("Network Time, from nist.time.gov: "+time+"\n");
+		console.log("Time and IP loggged to "+filename);
+		networkTimeUpdated = true;
+		if (ipUpdated) outFile.close();
 	});
 }
 
