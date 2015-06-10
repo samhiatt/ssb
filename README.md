@@ -1,10 +1,17 @@
-#Simple Screenshot Button
-Simple screenshot button add-on for Firefox.
+# Screenshot Button
+Screenshot logging button add-on for Firefox.
 
-Saves a full-page screenshot of the current tab to a new folder in the default Download location. Also grabs the browser's
-IP address from bot.whatismyipaddress.com and saves to text file.
+* Saves a full-page screenshot of the current tab to a new folder in the default Firefox Download folder. 
+* Logs the public IP address from whatismyipaddress.com, and the server time from nist.time.gov
+ 
+## Instalation instructions
+* Download https://github.com/samhiatt/ssb/blob/master/ssb.xpi?raw=true
+* From Firefox menu, open Tools -> Add-ons
+* Click the gear icon on the top of the page, next to the add-ons search box
+* Click "Install Add-on From File"
+* Select Downloads/ssb.xpi
 
-### prerequisites / build instructions
+### build instructions
 
 ##### Install Mozilla SDK
 Install [mozilla-addon-sdk](http://developer.mozilla.org/en-US/Add-ons/SDK/Tutorials/Installation).
@@ -24,7 +31,7 @@ cd ssb
 `cfx run`
 
 ## source
-Code adapted from: http://mxr.mozilla.org/mozilla-central/source/toolkit/devtools/gcli/commands/screenshot.js
+Screenshot code adapted from: http://mxr.mozilla.org/mozilla-central/source/toolkit/devtools/gcli/commands/screenshot.js
 
 ## license
 Mozilla Public License, v. 2.0. http://mozilla.org/MPL/2.0/
