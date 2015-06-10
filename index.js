@@ -48,11 +48,15 @@ function handleClick(state) {
 		var filename = IO.join(newDirName, "BrowserIpAddress_updated_" + updated.toISOString().replace(/:/g, "-") + ".txt");
 		var outFile = IO.open(filename,'w');
 		outFile.write("IP address, from bot.whatismyipaddress.com: "+ip+"\n");
-		var offset = new Date().getTimezoneOffset();
-		console.log("Browser timezone offset:", offset);
-		outFile.write("Browser timezone offset: "+ offset);
-		outFile.close();
-		console.log("Browser IP loggged to "+filename);
+		console.log("Browser time:", new Date().toISOString());
+		outFile.write("Browser time: "+ new Date().toISOString()+"\n");
+		getNetworkTime(function(err,time){
+			if (err) throw err;
+			console.log("Network Time:",time);
+			outFile.write("Network Time, from Date in http://nist.time.gov response header: "+time+"\n");
+			outFile.close();
+			console.log("Time and IP loggged to "+filename);
+		});
 	});
 }
 
@@ -89,7 +93,7 @@ function updateIp(callback){
 		url: "http://bot.whatismyipaddress.com/",
 		onComplete: function (response) {
 			if (response.status!=200){
-				callback(new Error("Error getting browser's IP from bot.whatismyipaddress.com. RESPONSE STATUS: "+response.status));
+				callback(new Error("Error getting browser's IP from bot.whatismyipaddress.com/. RESPONSE STATUS: "+response.status));
 			} else {
 				ip = response.text;
 				ipLastUpdated = new Date();
@@ -98,6 +102,29 @@ function updateIp(callback){
 		}
 	}).get();
 
+}
+
+function getNetworkTime(callback){
+	Request({
+		url: "http://nist.time.gov",
+		onComplete: function (response) {
+			if (response.status!=200){
+				callback(new Error("Error getting response from http://nist.time.gov. RESPONSE STATUS: "+response.status));
+			} else {
+				var utcString = new Date(response.headers["Date"]).toISOString();
+				//var respTxt = response.text;
+				//var timeStr = respTxt.match(/>(\d\d\:\d\d:\d\d)<\/span>/);
+				//var dateStr = respTxt.match(/id=ctdat>(.*?)<\/span>/);
+				//var parsedTime;
+				//try{
+				//	parsedTime = new Date(dateStr[1]+' '+timeStr[1]+' UTC').toISOString();
+				//} catch(err) {
+				//	console.error("Error parsing time from www.timenaddate.com/worldclock/timezone/utc.");
+				//}
+				callback(null, utcString);
+			}
+		}
+	}).get();
 }
 
 function takeScreenshot(document,newDir) {
