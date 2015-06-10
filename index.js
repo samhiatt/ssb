@@ -2,19 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var self = require('sdk/self');
-var buttons = require('sdk/ui/button/action');
-var tabs = require("sdk/tabs");
-var tab_utils = require("sdk/tabs/utils");
-var Request = require("sdk/request").Request;
-var IO = require("sdk/io/file");
 
-var { viewFor } = require("sdk/view/core");
+
+var self = require('sdk/self');
+var IO = require("sdk/io/file");
 const { Cc, Ci, Cu } = require("chrome");
 
 var ipLastUpdated, ip;
 
-exports.button = buttons.ActionButton({
+exports.button = require('sdk/ui/button/action').ActionButton({
   id: "ssb-button",
   label: "Screenshot",
   icon: {
@@ -26,9 +22,10 @@ exports.button = buttons.ActionButton({
 });
 
 function handleClick(state) {
-	var tab = tabs.activeTab;
+	var tab = require("sdk/tabs").activeTab;
+	var { viewFor } = require("sdk/view/core");
 	var lowLevelTab = viewFor(tab);
-	var browser = tab_utils.getBrowserForTab(lowLevelTab);
+	var browser = require("sdk/tabs/utils").getBrowserForTab(lowLevelTab);
 	var document = browser.contentDocument;
 
 	var downloadDir = Cc["@mozilla.org/file/directory_service;1"].
@@ -89,7 +86,7 @@ function updateIp(callback){
 		callback(null, ip,ipLastUpdated);
 		return;
 	}
-	ipRequest = Request({
+	ipRequest = require("sdk/request").Request({
 		url: "http://bot.whatismyipaddress.com/",
 		onComplete: function (response) {
 			if (response.status!=200){
@@ -105,7 +102,7 @@ function updateIp(callback){
 }
 
 function getNetworkTime(callback){
-	Request({
+	require("sdk/request").Request({
 		url: "http://nist.time.gov",
 		onComplete: function (response) {
 			if (response.status!=200){
