@@ -35,17 +35,18 @@ function handleClick(state) {
 
 	// Make new directory, named "Downloads/Snapshot_<document title>_<ISO date>"
 	var dateStr = new Date().toISOString().replace(/:/g,"-");
-	var newDirName = IO.join(downloadDir.path, "Snapshot_" + document.title + "_" + dateStr);
-	IO.mkpath(newDirName);
+	var screenshotDir = IO.join(downloadDir.path, "Snapshot_" + document.title + "_" + dateStr);
+	
+	var dirNames = makeDirStructure(screenshotDir);
 
-	takeScreenshot(document, newDirName);
+	takeScreenshot(document, dirNames.screenshots);
 	// Save document location metadata to screenshot directory
-	saveDocumentLocation(document, newDirName);
+	saveDocumentLocation(document, dirNames.sourceCode);
 	// Save DOM state to screenshot directory
-	saveDomState(document, newDirName);
+	saveDomState(document, dirNames.sourceCode);
 	
 	// Open new file in which to log IP address and network time.
-	var filename = IO.join(newDirName, "IpAndTimeLog.txt");
+	var filename = IO.join(dirNames.timeAndIp, "IpAndTimeLog.txt");
 	var outFile = IO.open(filename,'w');
 
 	// Log browser time to file, ISO format.
@@ -54,6 +55,8 @@ function handleClick(state) {
 	// Log browser's local time (including timezone offset)
 	console.log("Browser Local time:", new Date().toString());
 	outFile.write("Browser Local time: "+ new Date().toString()+"\n");
+	
+	notify(dirNames.proofs);
 	
 	var ipUpdated = false,
 		networkTimeUpdated = false;
@@ -83,6 +86,35 @@ function handleClick(state) {
 			outFile.close();
 		}
 	});
+}
+
+// Makes the following directory structure in the snapshot directory
+// - For Registration
+// - Hashes
+// - Proofs
+//   - Source Code
+//   - Screenshots
+//   - Date, Time & IP Verification
+function makeDirStructure(snapshotDir){
+	IO.mkpath(snapshotDir);
+	IO.mkpath(IO.join(snapshotDir,"For Registration"));
+	var hashesDir = IO.join(snapshotDir,"Hashes");
+	IO.mkpath(hashesDir);
+	var proofsDir = IO.join(snapshotDir,"Proofs");
+	IO.mkpath(proofsDir);
+	var sourceCodeDir = IO.join(proofsDir,"Source Code");
+	IO.mkpath(sourceCodeDir);
+	var screenshotsDir = IO.join(proofsDir,"Screenshots");
+	IO.mkpath(screenshotsDir);
+	var timeIpDir = IO.join(proofsDir,"Date, Time & IP Verification");
+	IO.mkpath(timeIpDir);
+	return {
+		hashes: hashesDir,
+		proofs: proofsDir,
+		sourceCode: sourceCodeDir,
+		screenshots: screenshotsDir,
+		timeAndIp: timeIpDir
+	};
 }
 
 // Save DOM state in screenshot directory
@@ -208,7 +240,6 @@ function takeScreenshot(document,newDir) {
 	persist.saveURI(source, null, null, 0, null, null, file, loadContext);
 	console.log("Saved screenshot to file "+file.path);
 	
-	notify(file.path);
 }
 
 function notify(filename){
