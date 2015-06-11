@@ -7,6 +7,8 @@
 var self = require('sdk/self');
 var IO = require("sdk/io/file");
 const { Cc, Ci, Cu } = require("chrome");
+const {TextDecoder, TextEncoder, OS} = Cu.import("resource://gre/modules/osfile.jsm", {});
+var dirNames;
 
 // Set up button and click handler
 exports.button = require('sdk/ui/button/action').ActionButton({
@@ -37,7 +39,7 @@ function handleClick(state) {
 	var dateStr = new Date().toISOString().replace(/:/g,"-");
 	var screenshotDir = IO.join(downloadDir.path, "Snapshot_" + document.title + "_" + dateStr);
 	
-	var dirNames = makeDirStructure(screenshotDir);
+	dirNames = makeDirStructure(screenshotDir);
 
 	takeScreenshot(document, dirNames.screenshots);
 	// Save document location metadata to screenshot directory
@@ -223,23 +225,38 @@ function takeScreenshot(document,newDir) {
 		.getService(Ci.nsIIOService);
 	let source = ioService.newURI(data, "UTF8", null);
 
-	// Use Persist API to save screenshot image
-	let Persist = Ci.nsIWebBrowserPersist;
-	let persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
-		.createInstance(Persist);
-	persist.persistFlags = Persist.PERSIST_FLAGS_REPLACE_EXISTING_FILES |
-	Persist.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
+	var str = source.path.replace(/^.*?;base64,/, "");
+	// Decode to a byte string
+	str = window.atob(str);
+	// Decode to an Uint8Array, because OS.File.writeAtomic expects an ArrayBuffer(View).
+	var decodedData = new Uint8Array(str.length);
+	for (var i = 0, e = str.length; i < e; ++i) {
+		decodedData[i] = str.charCodeAt(i);
+	}
+	var screenshotFilename = IO.join(newDir, "Screenshot.png");
+	OS.File.writeAtomic(screenshotFilename,decodedData).then(
+		function() {
+			// Success!
+			console.log("Saved screenshot to ", screenshotFilename);
+			//var hash = getMD5Hash(screenshotFilename);
+			//console.log("Got hash",hash);
+		},
+		function(ex) {
+			// Failed. Error information in ex
+			console.error("Error saving screenshot to ", screenshotFilename);
+		}
+	);
+}
 
-	var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-	file.initWithPath(IO.join(newDir, "Screenshot.png"));
-
-	let loadContext = document.defaultView
-		.QueryInterface(Ci.nsIInterfaceRequestor)
-		.getInterface(Ci.nsIWebNavigation)
-		.QueryInterface(Ci.nsILoadContext);
-	persist.saveURI(source, null, null, 0, null, null, file, loadContext);
-	console.log("Saved screenshot to file "+file.path);
-	
+function getMD5Hash(filename){
+	let md5 = require('MD5');
+	//var file = IO.read(filename,'b');
+	let decoder = new TextDecoder();
+	OS.File.read(filename, { encoding: "utf-8" }).then(function(contents){
+		console.log("Got file contents:",contents);
+		var hash = md5(contents);
+		console.log("Hash is",hash);
+	});
 }
 
 function notify(filename){

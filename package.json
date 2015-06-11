@@ -2,13 +2,16 @@
   "license": "MPL 2.0",
   "description": "Simple screenshot button",
   "engines": {
-    "firefox": ">=32",
-    "fennec": ">=32"
+    "firefox": ">=38",
+    "fennec": ">=38"
   },
   "author": "Sam Hiatt samhiatt@gmail.com",
   "title": "Screenshot Button",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "main": "index.js",
-  "id": "fde1-hEdfTTCob7jywk",
-  "name": "ssb"
+  "id": "jid1-fEdfTTCob7jywk@jetpack",
+  "name": "ssb",
+  "dependencies": {
+    "MD5": "^1.2.2"
+  }
 }
