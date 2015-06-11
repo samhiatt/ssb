@@ -49,8 +49,11 @@ function handleClick(state) {
 	var outFile = IO.open(filename,'w');
 
 	// Log browser time to file, ISO format.
-	console.log("Browser time:", new Date().toISOString());
-	outFile.write("Browser time: "+ new Date().toISOString()+"\n");
+	console.log("Browser UTC time:", new Date().toISOString());
+	outFile.write("Browser UTC time: "+ new Date().toISOString()+"\n");
+	// Log browser's local time (including timezone offset)
+	console.log("Browser Local time:", new Date().toString());
+	outFile.write("Browser Local time: "+ new Date().toString()+"\n");
 	
 	var ipUpdated = false,
 		networkTimeUpdated = false;
